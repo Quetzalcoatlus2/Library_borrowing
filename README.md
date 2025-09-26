@@ -1,1 +1,1 @@
-SQL queries for the management of book borrowing at a library.
+PL/SQL queries for the management of book borrowing at a library.
