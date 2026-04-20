@@ -1,94 +1,94 @@
--- CREARE TABELE ȘI CONSTRÂNGERI
+-- CREATE TABLES AND CONSTRAINTS
 
--- 1. Autori
-CREATE TABLE autori
-    (pk_autor                       NUMBER NOT NULL,
-    nume_autor                     VARCHAR2(50) NOT NULL
+-- 1. Authors
+CREATE TABLE authors
+    (author_id                       NUMBER NOT NULL,
+    author_name                     VARCHAR2(50) NOT NULL
     );
-ALTER TABLE autori ADD CONSTRAINT pk_autor PRIMARY KEY (pk_autor);
-ALTER TABLE autori ADD CONSTRAINT uk_nume_autor UNIQUE (nume_autor);
+ALTER TABLE authors ADD CONSTRAINT pk_author PRIMARY KEY (author_id);
+ALTER TABLE authors ADD CONSTRAINT uk_author_name UNIQUE (author_name);
 
---2. Cititori
-CREATE TABLE cititori
-    (pk_cititor                     NUMBER NOT NULL,
-    nume_cititor                   VARCHAR2(50),
-    varsta                         NUMBER(2,0),
+-- 2. Readers
+CREATE TABLE readers
+    (reader_id                     NUMBER NOT NULL,
+    reader_name                   VARCHAR2(50),
+    age                         NUMBER(2,0),
     sex                            VARCHAR2(1),
-    calificativ                    VARCHAR2(50));  
-ALTER TABLE cititori ADD CONSTRAINT pk_cititor PRIMARY KEY (pk_cititor);
+    rating                    VARCHAR2(50));  
+ALTER TABLE readers ADD CONSTRAINT pk_reader PRIMARY KEY (reader_id);
 
--- 3. Carti
-CREATE TABLE carti
-    (pk_carte                       NUMBER NOT NULL,
-    domeniu                        VARCHAR2(50),
-    titlu_carte                    VARCHAR2(100) NOT NULL,
-    pk_autor1                      NUMBER,
-    pk_autor2                      NUMBER,
-    pk_autor3                      NUMBER);
-    ALTER TABLE carti ADD CONSTRAINT pk_carte PRIMARY KEY (pk_carte);
-    ALTER TABLE carti ADD CONSTRAINT ck_carti_domeniu CHECK (domeniu in ('Beletristica','Stiinte','Divertisment'));
-    ALTER TABLE carti ADD CONSTRAINT uk_nume_carte UNIQUE (titlu_carte);
-    ALTER TABLE carti ADD CONSTRAINT fk_carti_autori FOREIGN KEY (pk_autor1) REFERENCES autori (pk_autor);
+-- 3. Books
+CREATE TABLE books
+    (book_id                       NUMBER NOT NULL,
+    category                        VARCHAR2(50),
+    book_title                    VARCHAR2(100) NOT NULL,
+    primary_author_id                      NUMBER,
+    secondary_author_id                      NUMBER,
+    tertiary_author_id                      NUMBER);
+    ALTER TABLE books ADD CONSTRAINT pk_book PRIMARY KEY (book_id);
+    ALTER TABLE books ADD CONSTRAINT ck_books_category CHECK (category in ('Fiction','Science','Entertainment'));
+    ALTER TABLE books ADD CONSTRAINT uk_book_title UNIQUE (book_title);
+    ALTER TABLE books ADD CONSTRAINT fk_books_authors FOREIGN KEY (primary_author_id) REFERENCES authors (author_id);
 
---4. Imprumuturi
-    CREATE TABLE imprumuturi
-    (pk_imprumut                    NUMBER NOT NULL,
-    pk_carte                       NUMBER NOT NULL,
-    pk_cititor                     NUMBER NOT NULL,
-    data_start                     DATE NOT NULL,
-    data_end                       DATE NOT NULL,
-    data_return                    DATE,
-    observatii                     VARCHAR2(50));
-    ALTER TABLE imprumuturi ADD CONSTRAINT pk_imprumut PRIMARY KEY (pk_imprumut);
-    ALTER TABLE imprumuturi ADD CONSTRAINT fk_imprumuturi_carti FOREIGN KEY (pk_carte) REFERENCES carti (pk_carte);
-    ALTER TABLE imprumuturi ADD CONSTRAINT fk_imprumuturi_cititori FOREIGN KEY (pk_cititor) REFERENCES cititori (pk_cititor);
-
-
+-- 4. Loans
+    CREATE TABLE loans
+    (loan_id                    NUMBER NOT NULL,
+    book_id                       NUMBER NOT NULL,
+    reader_id                     NUMBER NOT NULL,
+    start_date                     DATE NOT NULL,
+    due_date                       DATE NOT NULL,
+    return_date                    DATE,
+    notes                     VARCHAR2(50));
+    ALTER TABLE loans ADD CONSTRAINT pk_loan PRIMARY KEY (loan_id);
+    ALTER TABLE loans ADD CONSTRAINT fk_loans_books FOREIGN KEY (book_id) REFERENCES books (book_id);
+    ALTER TABLE loans ADD CONSTRAINT fk_loans_readers FOREIGN KEY (reader_id) REFERENCES readers (reader_id);
 
 
---INTRODUCEREA DATELOR DE LUCRU
 
---1. Autori
-    insert into autori values(1, 'Neil Gaiman');
-    insert into autori values(2, 'Terry Pratchett');
-    insert into autori values(3, 'Stephen Hawking');
-    insert into autori values(4, 'Leonard Mlodinow');
-    insert into autori values(5, 'Siddhartha Mukherjee');
-    insert into autori values(6, 'Michio Kaku');
-    insert into autori values(7, 'David Trottier');
-    insert into autori values(8, 'Douglas Adams');
-    insert into autori values(9, 'Tina Fey');
+
+-- INSERT SAMPLE DATA
+
+-- 1. Authors
+    insert into authors values(1, 'Neil Gaiman');
+    insert into authors values(2, 'Terry Pratchett');
+    insert into authors values(3, 'Stephen Hawking');
+    insert into authors values(4, 'Leonard Mlodinow');
+    insert into authors values(5, 'Siddhartha Mukherjee');
+    insert into authors values(6, 'Michio Kaku');
+    insert into authors values(7, 'David Trottier');
+    insert into authors values(8, 'Douglas Adams');
+    insert into authors values(9, 'Tina Fey');
     
---2. Cititori
-    insert into cititori values(1, 'Dăscălescu Mihai', 22,'M','FB');
-    insert into cititori values(2, 'Vornicu Irina-Maria', 36,'F','S');
-    insert into cititori values(3, 'Dinescu Călin', 70,'M','NS');
-    insert into cititori values(4, 'Popescu Lia-Ioana', 21,'F','B');
-    insert into cititori values(5, 'Mihăiescu Cezarina', 25,'F','S');
+-- 2. Readers
+    insert into readers values(1, 'Dăscălescu Mihai', 22,'M','FB');
+    insert into readers values(2, 'Vornicu Irina-Maria', 36,'F','S');
+    insert into readers values(3, 'Dinescu Călin', 70,'M','NS');
+    insert into readers values(4, 'Popescu Lia-Ioana', 21,'F','B');
+    insert into readers values(5, 'Mihăiescu Cezarina', 25,'F','S');
     
---3. Carti
-    insert into carti values(1,'Beletristica','Good Omens',1,2,null);
-    insert into carti values(2,'Beletristica','The Ocean at the End of the Lane',1,null,null);
-    insert into carti values(3,'Beletristica','American Gods',1,null,null);
-    insert into carti values(4,'Beletristica','The Colour of Magic',2,null,null);
-    insert into carti values(5,'Stiinte','The Grand Design',3,4,null);
-    insert into carti values(6,'Stiinte','A Briefer History of Time',3,4,null);
-    insert into carti values(7,'Stiinte','The Gene: An Intimate History',5,null,null);
-    insert into carti values(8,'Stiinte','Physics of the Impossible',6,null,null);
-    insert into carti values(9,'Divertisment','Two Screenplays',7,null,null);
-    insert into carti values(10,'Divertisment','Last Chance to See',8,null,null);
-    insert into carti values(11,'Divertisment','The Meaning of Liff',8,null,null);
-    insert into carti values(12,'Divertisment','Bossypants',9,null,null);
+-- 3. Books
+    insert into books values(1,'Fiction','Good Omens',1,2,null);
+    insert into books values(2,'Fiction','The Ocean at the End of the Lane',1,null,null);
+    insert into books values(3,'Fiction','American Gods',1,null,null);
+    insert into books values(4,'Fiction','The Colour of Magic',2,null,null);
+    insert into books values(5,'Science','The Grand Design',3,4,null);
+    insert into books values(6,'Science','A Briefer History of Time',3,4,null);
+    insert into books values(7,'Science','The Gene: An Intimate History',5,null,null);
+    insert into books values(8,'Science','Physics of the Impossible',6,null,null);
+    insert into books values(9,'Entertainment','Two Screenplays',7,null,null);
+    insert into books values(10,'Entertainment','Last Chance to See',8,null,null);
+    insert into books values(11,'Entertainment','The Meaning of Liff',8,null,null);
+    insert into books values(12,'Entertainment','Bossypants',9,null,null);
     
---4. Imprumuturi
-    insert into imprumuturi values(1, 1, 1, sysdate-4,sysdate+6, sysdate-2,null);
-    insert into imprumuturi values(2, 2, 3, sysdate-10,sysdate, sysdate-5,'coperta murdara');
-    insert into imprumuturi values(3, 2, 4, sysdate-2,sysdate+8, sysdate,null);
-    insert into imprumuturi values(4, 4, 5, sysdate,sysdate+10, null,null);
-    insert into imprumuturi values(5, 6, 2, sysdate-20,sysdate-10, sysdate-15,'semne cu pixul');
-    insert into imprumuturi values(6, 10, 3, sysdate-25,sysdate-15, sysdate-10,'pagina rupta, a intarziat 5 zile');
-    insert into imprumuturi values(7, 11, 1, sysdate-15,sysdate-5, sysdate-2,'a intarziat 3 zile');
-    insert into imprumuturi values(8, 12, 2, sysdate-4,sysdate+6, null,null);
-    insert into imprumuturi values(9, 9, 4, sysdate-30,sysdate-20, sysdate-16,'a intarziat 4 zile');
-    insert into imprumuturi values(10, 8, 5, sysdate,sysdate+10, null,null);
-    insert into imprumuturi values(11, 6, 3, sysdate-20,sysdate-10, sysdate-2,'a intarziat 8 zile');
+-- 4. Loans
+    insert into loans values(1, 1, 1, sysdate-4,sysdate+6, sysdate-2,null);
+    insert into loans values(2, 2, 3, sysdate-10,sysdate, sysdate-5,'dirty cover');
+    insert into loans values(3, 2, 4, sysdate-2,sysdate+8, sysdate,null);
+    insert into loans values(4, 4, 5, sysdate,sysdate+10, null,null);
+    insert into loans values(5, 6, 2, sysdate-20,sysdate-10, sysdate-15,'pen marks');
+    insert into loans values(6, 10, 3, sysdate-25,sysdate-15, sysdate-10,'torn page, returned 5 days late');
+    insert into loans values(7, 11, 1, sysdate-15,sysdate-5, sysdate-2,'returned 3 days late');
+    insert into loans values(8, 12, 2, sysdate-4,sysdate+6, null,null);
+    insert into loans values(9, 9, 4, sysdate-30,sysdate-20, sysdate-16,'returned 4 days late');
+    insert into loans values(10, 8, 5, sysdate,sysdate+10, null,null);
+    insert into loans values(11, 6, 3, sysdate-20,sysdate-10, sysdate-2,'returned 8 days late');

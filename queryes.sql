@@ -1,355 +1,358 @@
---EXERCIȚII
+-- EXERCISES
 
---Afisarea datelor dintr-o tabela.
---Sa se scrie fraze select care sa afiseze urmatoarele:
---Nume autor
-select autori.nume_autor from autori
-order by autori.pk_autor;
---Titlu carte, domeniu
-select carti.titlu_carte, carti.domeniu from carti
-order by carti.pk_carte;
---Nume cititor, varsta, sex, calificativ
-select cititori.nume_cititor, cititori.varsta, cititori.sex, cititori.calificativ from cititori
-order by cititori.pk_cititor;
+-- Displaying data from one table.
+-- Write SELECT statements that display the following:
+-- Author name
+select authors.author_name from authors
+order by authors.author_id;
+-- Book title, domain
+select books.book_title, books.category from books
+order by books.book_id;
+-- Reader name, age, sex, rating
+select readers.reader_name, readers.age, readers.sex, readers.rating from readers
+order by readers.reader_id;
 
 
 	
 	
---Afisarea datelor din mai multe tabele (SELECT)
---Sa se scrie fraze select pentru afisarea urmatoarelor informatii:
+-- Displaying data from multiple tables (SELECT)
+-- Write SELECT statements to display the following information:
 
---1  Titlu carte, nume autori: 
-select c.titlu_carte, a.nume_autor from carti c, autori a
-where a.pk_autor in (c.pk_autor1, c.pk_autor2, c.pk_autor3)
-order by c.titlu_carte;
+-- 1  Book title, author name:
+select c.book_title, a.author_name from books c, authors a
+where a.author_id in (c.primary_author_id, c.secondary_author_id, c.tertiary_author_id)
+order by c.book_title;
 
---2  Toate imprumuturile de carti din biblioteca (titlu_carte, nume_cititor, data_start, data_end, data_return)
-select c.titlu_carte, cit.nume_cititor, i.data_start, i.data_end, i.data_return from carti c, cititori cit, imprumuturi i
-where c.pk_carte = i.pk_carte 
-and cit.pk_cititor = i.pk_cititor
-order by i.data_start;
+-- 2  All library book loans (book_title, reader_name, start_date, end_date, return_date)
+select c.book_title, cit.reader_name, i.start_date, i.due_date, i.return_date from books c, readers cit, loans i
+where c.book_id = i.book_id 
+and cit.reader_id = i.reader_id
+order by i.start_date;
 
---3  Toate imprumuturile care nu au fost returnate pana in ziua de azi. Ziua curenta se afla cu ajutorul comenzii sysdate.
-select c.titlu_carte, cit.nume_cititor, i.data_start, i.data_end from carti c,  cititori cit, imprumuturi i
-where c.pk_carte = i.pk_carte 
-and cit.pk_cititor = i.pk_cititor
-and i.data_return is null
-order by i.data_end;
+-- 3  All loans not yet returned as of today. The current day is obtained with sysdate.
+select c.book_title, cit.reader_name, i.start_date, i.due_date from books c,  readers cit, loans i
+where c.book_id = i.book_id 
+and cit.reader_id = i.reader_id
+and i.return_date is null
+order by i.due_date;
 
---4  Toate imprumuturile care nu au fost returnate pana in ziua de azi si numarul de zile de cand au fost imprumutate, numarul de zile de intarziere.
-select c.titlu_carte, cit.nume_cititor, i.data_start, i.data_end, trunc(sysdate - i.data_start) as zile_de_la_imprumut, greatest(trunc(sysdate - i.data_end),0) as zile_intarziere from carti c,  cititori cit, imprumuturi i
-where c.pk_carte = i.pk_carte 
-and cit.pk_cititor = i.pk_cititor
-and i.data_return is nu
+-- 4  All loans not yet returned as of today, plus days since borrowed and overdue days.
+select c.book_title, cit.reader_name, i.start_date, i.due_date, trunc(sysdate - i.start_date) as days_since_borrowed, greatest(trunc(sysdate - i.due_date),0) as overdue_days from books c,  readers cit, loans i
+where c.book_id = i.book_id 
+and cit.reader_id = i.reader_id
+and i.return_date is null;
 
---5  Toate imprumuturile mai vechi de 2 saptamani
-select titlu_carte, nume_cititor, data_start, data_end, data_return from carti c, cititori ci, imprumuturi i
-where c.pk_carte = i.pk_carte
-and ci.pk_cititor = i.pk_cititor
-and ((data_return is not null and data_return < sysdate - 14) or (data_end < sysdate - 14))
-order by data_return;
+-- 5  All loans older than 2 weeks
+select book_title, reader_name, start_date, due_date, return_date from books c, readers ci, loans i
+where c.book_id = i.book_id
+and ci.reader_id = i.reader_id
+and ((return_date is not null and return_date < sysdate - 14) or (due_date < sysdate - 14))
+order by return_date;
 
---6  Numarul de carti care trebuie sa fie returnate in urmatoarea saptamana: selectul afiseaza ziua si numarul  de carti care trebuie sa fie returnate.
-select trunc(data_end) as data_returnare, count(*) as numar_carti_returnare from imprumuturi
-    where data_end between sysdate and sysdate + 7
-    and data_return is null            
-    group by trunc(data_end)                          
-    order by trunc(data_end);
+-- 6  Number of books due in the next week: show date and number of books to return.
+select trunc(due_date) as return_date, count(*) as books_due_count from loans
+    where due_date between sysdate and sysdate + 7
+    and return_date is null            
+    group by trunc(due_date)                          
+    order by trunc(due_date);
 	
---7  Toate cartile care exista in mod fizic in biblioteca (nu sunt imprumutate in acest moment). Aici intra cartile care nu au fost imprumutate niciodata plus cartile care au fost imprumutate si returnate pana in ziua curenta. Selectul trebuie sa trateze si cazul cand o carte a fost imprumutata de mai multe ori (a fost returnata si apoi imprumtata catre alt cititor).
-select carti.titlu_carte from carti
+-- 7  All books physically available in the library (not currently loaned). This includes books never loaned and books returned by today. The query must also handle books loaned multiple times.
+select books.book_title from books
     where not exists (
-    select 1 from imprumuturi
-    where carti.pk_carte = imprumuturi.pk_carte
-    and imprumuturi.data_return is null)
-    order by carti.titlu_carte;
+    select 1 from loans
+    where books.book_id = loans.book_id
+    and loans.return_date is null)
+    order by books.book_title;
 	
---8  Toate imprumuturile pentru un cititor dat  
-select carti.titlu_carte, cititori.nume_cititor, imprumuturi.data_start, imprumuturi.data_end, imprumuturi.data_return,imprumuturi.observatii from carti, cititori, imprumuturi
-    where carti.pk_carte = imprumuturi.pk_carte 
-    and cititori.pk_cititor = imprumuturi.pk_cititor
-    and cititori.pk_cititor = 2 --introducem id-ul cititorului pentru care dorim sa vedem imprumuturile
-    order by imprumuturi.pk_imprumut;
+-- 8  All loans for a given reader
+select books.book_title, readers.reader_name, loans.start_date, loans.due_date, loans.return_date,loans.notes from books, readers, loans
+    where books.book_id = loans.book_id 
+    and readers.reader_id = loans.reader_id
+    and readers.reader_id = 2 -- set the reader ID for which you want to see loans
+    order by loans.loan_id;
 	
---9  Toate imprumuturile care nu au fost returnate la termen de catre un cititor dat (data_return > data_end or data_return is null and sysdate>data_end) 
-select carti.titlu_carte, imprumuturi.data_start, imprumuturi.data_end, imprumuturi.data_return, imprumuturi.observatii from carti, imprumuturi
-   where carti.pk_carte = imprumuturi.pk_carte
-   and imprumuturi.pk_cititor = 5
-   and (imprumuturi.data_return is null and sysdate > imprumuturi.data_end
-   or imprumuturi.data_return > imprumuturi.data_end)
-   order by imprumuturi.data_start;
+-- 9  All overdue loans for a given reader (return_date > due_date OR return_date IS NULL and sysdate > due_date)
+select books.book_title, loans.start_date, loans.due_date, loans.return_date, loans.notes from books, loans
+   where books.book_id = loans.book_id
+   and loans.reader_id = 5
+   and (loans.return_date is null and sysdate > loans.due_date
+   or loans.return_date > loans.due_date)
+   order by loans.start_date;
    
---10 Cititorii care au mai mult de un imprumut in ziua curenta: nume cititor, titlu_carte, data_start, data_end -Stop
-select cititori.nume_cititor, carti.titlu_carte, imprumuturi.data_start, imprumuturi.data_end from cititori, carti, imprumuturi
-   where cititori.pk_cititor = imprumuturi.pk_cititor
-   and carti.pk_carte = imprumuturi.pk_carte
-   and imprumuturi.data_start <= sysdate
-   and imprumuturi.data_end >= sysdate
-   and imprumuturi.pk_cititor in (
-    select pk_cititor
-    from imprumuturi
-    where data_start <= sysdate
-    and data_end >= sysdate
-    group by pk_cititor
+-- 10 Readers with more than one active loan today: reader name, book title, start_date, end_date
+select readers.reader_name, books.book_title, loans.start_date, loans.due_date from readers, books, loans
+   where readers.reader_id = loans.reader_id
+   and books.book_id = loans.book_id
+   and loans.start_date <= sysdate
+   and loans.due_date >= sysdate
+   and loans.reader_id in (
+    select reader_id
+    from loans
+    where start_date <= sysdate
+    and due_date >= sysdate
+    group by reader_id
     having count(*) > 1
 )
-order by cititori.nume_cititor, imprumuturi.data_start;
+order by readers.reader_name, loans.start_date;
 
---11 Numele cititorilor si numarul de imprumuturi efectuate de acel cititor in decursul timpului: nume_autor, numar_imprumuturi
-select cititori.nume_cititor, count(imprumuturi.pk_imprumut) as numar_imprumuturi from cititori, imprumuturi
-   where cititori.pk_cititor = imprumuturi.pk_cititor
-   group by cititori.nume_cititor
-   order by numar_imprumuturi desc;
+-- 11 Reader names and the total number of loans made over time: reader_name, loan_count
+select readers.reader_name, count(loans.loan_id) as loan_count from readers, loans
+   where readers.reader_id = loans.reader_id
+   group by readers.reader_name
+   order by loan_count desc;
    
---12 Lista cu primii 3 cititori in ordinea numarului de imprumuturi
-select cititori.nume_cititor, count(imprumuturi.pk_imprumut) as numar_imprumuturi from cititori, imprumuturi
-   where cititori.pk_cititor = imprumuturi.pk_cititor
-   group by cititori.nume_cititor
-   order by numar_imprumuturi desc
+-- 12 Top 3 readers by number of loans
+select readers.reader_name, count(loans.loan_id) as loan_count from readers, loans
+   where readers.reader_id = loans.reader_id
+   group by readers.reader_name
+   order by loan_count desc
    fetch first 3 rows only;
    
---13 Lista cu primii 3 cititori care au cele mai multe intarzieri la returnarea cartilor
-select cititori.nume_cititor, sum(imprumuturi.data_return - imprumuturi.data_end) as total_intarzieri
-from cititori, imprumuturi
-where cititori.pk_cititor = imprumuturi.pk_cititor
-and imprumuturi.data_return > imprumuturi.data_end
-group by cititori.nume_cititor
-order by total_intarzieri desc
+-- 13 Top 3 readers with the most late returns
+select readers.reader_name, sum(loans.return_date - loans.due_date) as total_late_days
+from readers, loans
+where readers.reader_id = loans.reader_id
+and loans.return_date > loans.due_date
+group by readers.reader_name
+order by total_late_days desc
 fetch first 3 rows only;
 
---14 Lista primilor 3 cititori cu calificative negative. Calificativul unui cititor este dat de raportul dintre numarul de carti imprumutate si numarul de intarzieri la returnare. Este posibil ca un cititor sa aiba multe intarzieri (deci este in capul listei la numar de intarzieri), dar si multe imprumuturi, deci calificativul acestui cititor este mai bun decat al unui alt cititor cu o singura intarziere dar si un singur imprumut.
+-- 14 Top 3 readers with the worst ratings. A rating is based on the ratio between number of borrowed books and number of late returns.
 select 
-    cititori.nume_cititor, 
-    count(imprumuturi.pk_imprumut) as numar_imprumuturi,
-    sum(case when imprumuturi.data_return > imprumuturi.data_end then 1 else 0 end) as numar_intarzieri,
+    readers.reader_name, 
+    count(loans.loan_id) as loan_count,
+    sum(case when loans.return_date > loans.due_date then 1 else 0 end) as late_return_count,
     case 
-        when sum(case when imprumuturi.data_return > imprumuturi.data_end then 1 else 0 end) > 0 
-        then count(imprumuturi.pk_imprumut) / sum(case when imprumuturi.data_return > imprumuturi.data_end then 1 else 0 end) 
+        when sum(case when loans.return_date > loans.due_date then 1 else 0 end) > 0 
+        then count(loans.loan_id) / sum(case when loans.return_date > loans.due_date then 1 else 0 end) 
         else 0 
-    end as calificativ
-from cititori, imprumuturi
-where cititori.pk_cititor = imprumuturi.pk_cititor
-group by cititori.nume_cititor
-having count(imprumuturi.pk_imprumut) > 0 
-order by calificativ desc
+    end as rating
+from readers, loans
+where readers.reader_id = loans.reader_id
+group by readers.reader_name
+having count(loans.loan_id) > 0 
+order by rating desc
 fetch first 3 rows with ties;
 
---15 Cartile cele mai solicitate pentru imprumut (cu numarul cel mai mare de imprumuturi)
+-- 15 Most requested books for borrowing (highest number of loans)
 select 
-    carti.titlu_carte, 
-    count(imprumuturi.pk_imprumut) as numar_imprumuturi
-from carti, imprumuturi
-where carti.pk_carte = imprumuturi.pk_carte
-group by carti.titlu_carte
-order by numar_imprumuturi desc;
+    books.book_title, 
+    count(loans.loan_id) as loan_count
+from books, loans
+where books.book_id = loans.book_id
+group by books.book_title
+order by loan_count desc;
 
---16 Cei mai bine cititi autori  (autorii ai caror carti au fost cel mai mult solicitate)
+-- 16 Most-read authors (authors whose books were requested most often)
 select 
-    autori.nume_autor, 
-    count(imprumuturi.pk_imprumut) as numar_imprumuturi
-from autori, carti, imprumuturi
-where carti.pk_autor1 = autori.pk_autor
-and carti.pk_carte = imprumuturi.pk_carte
-group by autori.nume_autor
-order by numar_imprumuturi desc;
+    authors.author_name, 
+    count(loans.loan_id) as loan_count
+from authors, books, loans
+where books.primary_author_id = authors.author_id
+and books.book_id = loans.book_id
+group by authors.author_name
+order by loan_count desc;
 
 
 
---UPDATE
---1 Sa se scrie instructiuni update care modifica numele unui autor si titlul unei carti.
-update autori
-   set nume_autor = 'Neil Gaiman'
-   where pk_autor = 1;
-update carti
-   set titlu_carte = 'Good Omens'
-   where pk_carte = 1;
+-- UPDATE
+-- 1 Write UPDATE statements that modify an author name and a book title.
+update authors
+   set author_name = 'Neil Gaiman'
+   where author_id = 1;
+update books
+   set book_title = 'Good Omens'
+   where book_id = 1;
    
---2 Sa se scrie instructiunea update care trece toate impumuturile de la un cititor pe numele altui cititor.
-update imprumuturi
-set pk_cititor = 1  -- Noul ID al cititorului
-where pk_cititor = 3;  -- ID-ul cititorului vechi al cărui împrumuturi trebuie actualizate
+-- 2 Write an UPDATE statement to move all loans from one reader to another.
+update loans
+set reader_id = 1  -- New reader ID
+where reader_id = 3;  -- Old reader ID whose loans must be updated
 
---3 Completeaza cu data curenta campul “data_return” din tabela”imprumuturi” pentru un cititor dat si o carte data (cititorul a returnat cartea la biblioteca).
-update imprumuturi
-set data_return = sysdate
-where pk_cititor = 1
-and pk_carte = 3
-and data_return is null;
+-- 3 Fill the current date in the return_date field in loans for a given reader and book (book was returned).
+update loans
+set return_date = sysdate
+where reader_id = 1
+and book_id = 3
+and return_date is null;
 
---4 Prelungeste perioada imprumutului cu 3 saptamani pentru toate cartile din domeniul “stiinte”.
-update imprumuturi i
-set i.data_end = i.data_end + 21  
-where i.pk_carte IN (
-    select c.pk_carte
-    from carti c
-    where c.domeniu = 'Stiinte' 
+-- 4 Extend the loan period by 3 weeks for all books in the science domain.
+update loans i
+set i.due_date = i.due_date + 21  
+where i.book_id IN (
+    select c.book_id
+    from books c
+    where c.category = 'Science' 
 );
 
---5 Toate titlurile cartilor sa fie scrise cu majuscule
-update carti
-set titlu_carte = upper(titlu_carte);
+-- 5 Convert all book titles to uppercase
+update books
+set book_title = upper(book_title);
 
---6 Titlurile cartilor scrise de un autor (prim_autor) sa inceapa cu majuscula si apoi sa continue cu litera mica
-update carti
-set titlu_carte = initcap(titlu_carte)
-where pk_autor1 = 'Neil Gaiman';
-
-
-
---Sa se scrie instructiuni DELETE care sa stearga urmatoarele informatii:
---1 Imprumuturile pentru un anumit cititor
-delete from imprumuturi
-where pk_cititor = 1;
-
---2 Un cititor din baza de date. Se folosesc 2 metode:
---Se sterg toate informatiile din tabele copil care tin de tabela “cititori”. (Ex: tabela “imprumuturi”). Apoi se sterge informatia din tabela parinte. 
---In caz contrar la executia instructiunii delete din tabela parinte apare eroare datorata constrangerilor de tip “foreign key” care leaga cititorul de imprumuturi.
-delete from imprumuturi
-where pk_cititor = 1;
-delete from cititori
-where pk_cititor = 1;
---Se executa comanda delete cu optiunea “on delete cascade”: in acest caz se sterg toate informatiile din tabelele copil care sunt legate prin constrangeri “foreign key” de tabela parinte.
-ALTER TABLE imprumuturi ADD CONSTRAINT fk_imprumuturi_cititori FOREIGN KEY (pk_cititor) REFERENCES cititori (pk_cititor) ON DELETE CASCADE;
-delete from cititori
-where pk_cititor = 1;
+-- 6 Titles of books written by a specific primary author should be init-capitalized (hardcoded example author name: Neil Gaiman)
+update books b
+set book_title = initcap(book_title)
+where b.primary_author_id in (
+    select a.author_id
+    from authors a
+    where a.author_name = 'Neil Gaiman'
+);
 
 
 
+-- Write DELETE statements to remove the following information:
+-- 1 Loans for a specific reader
+delete from loans
+where reader_id = 1;
+
+-- 2 A reader from the database. Use 2 methods:
+-- Delete all data in child tables related to the readers table (e.g., loans), then delete the parent row.
+-- Otherwise, deleting from the parent table causes a foreign key constraint error.
+delete from loans
+where reader_id = 1;
+delete from readers
+where reader_id = 1;
+-- Execute delete with ON DELETE CASCADE: all child-table rows linked by foreign keys are removed automatically.
+ALTER TABLE loans ADD CONSTRAINT fk_loans_readers FOREIGN KEY (reader_id) REFERENCES readers (reader_id) ON DELETE CASCADE;
+delete from readers
+where reader_id = 1;
 
 
---Sa se scrie functii PL/SQL care sa rezolve urmatoarele taskuri:
 
---1 Verifica daca o carte este disponibila sau imprumutata: returneaza 0 daca este disponibila in biblioteca, 1 in caz ca este imprumutata:
+
+
+-- Write PL/SQL functions to solve the following tasks:
+
+-- 1 Check whether a book is available or borrowed: return 0 if available, 1 if borrowed:
 
 --CREATE OR REPLACE 
---FUNCTION carte_disponibila(titlu_carte in varchar2) return number is
+--FUNCTION book_available(book_title in varchar2) return number is
 --begin
 --	…
 --return …;
 --end;
 --/
 
-create or replace function carte_disponibila (p_pk_carte in number)
+create or replace function book_available (p_book_id in number)
 return number
 is
     v_count number;
 begin
     select count(*)
     into v_count
-    from imprumuturi
-    where pk_carte = p_pk_carte
-      and data_return is null;
+    from loans
+    where book_id = p_book_id
+      and return_date is null;
 
     if v_count > 0 then
         return 1; 
     else
         return 0;
     end if;
-end carte_disponibila;
+end book_available;
 /
 
-select carte_disponibila(9) as unu_pentru_imprumut from dual;
+select book_available(9) as one_if_borrowed from dual;
 
 
---2 Calculeaza numarul de carti pentru un autor dat
+-- 2 Calculate the number of books for a given author
 
 --create or replace 
---function nr_carti_per_autor(nume_autor in varchar2) return number is
+--function book_count_per_author(author_name in varchar2) return number is
 --begin
-    -- your logic here
 --    return ...;
 --end;
 --/
 
 create or replace 
-function nr_carti_per_autor(pk_autor in number) 
+function book_count_per_author(p_author_id in number) 
 return number 
 is
     v_count number := 0;
 begin
-    select count(c.pk_carte)
+    select count(c.book_id)
     into v_count
-    from carti c
-    where (c.pk_autor1 = pk_autor and c.pk_autor1 is not null)
-       or (c.pk_autor2 = pk_autor and c.pk_autor1 is not null) 
-       or (c.pk_autor3 = pk_autor and c.pk_autor1 is not null);
+    from books c
+    where (c.primary_author_id = p_author_id and c.primary_author_id is not null)
+       or (c.secondary_author_id = p_author_id and c.secondary_author_id is not null) 
+       or (c.tertiary_author_id = p_author_id and c.tertiary_author_id is not null);
 
     return v_count;
 end;
 /
-select nr_carti_per_autor(9) from dual;
+select book_count_per_author(9) from dual;
 
 
 
 
---TRIGGERS
---1 sa se scrie triggerul din exemplu si sa se verifice functionalitatea la inserarea unei noi linii in tabela imprumuturi.
+-- TRIGGERS
+-- 1 Write the example trigger and verify behavior when inserting a new row in loans.
 
-drop sequence pk_imprumut; 
-drop trigger trig_imprumuturi;
+drop sequence loan_id; 
+drop trigger trig_loans;
 
-create sequence pk_imprumut
+create sequence loan_id
   increment by 1
   start with 1
   minvalue 1
   maxvalue 9999999999999;
 
 
-create or replace trigger trig_imprumuturi
-  before insert on imprumuturi
+create or replace trigger trig_loans
+  before insert on loans
   referencing new as new old as old
   for each row
 begin
-  select pk_imprumut.nextval into :new.pk_imprumut from dual;
+  select loan_id.nextval into :new.loan_id from dual;
 end;
 /
 
-delete from imprumuturi;
-insert into imprumuturi (pk_carte, pk_cititor, data_start, data_end, data_return, observatii) values (1, 1, sysdate - 4, sysdate + 6, null, 'observatii');
-select * from imprumuturi;
+delete from loans;
+insert into loans (book_id, reader_id, start_date, due_date, return_date, notes) values (1, 1, sysdate - 4, sysdate + 6, null, 'notes');
+select * from loans;
 
 
---2 Pe baza modelului sa se scrie un trigger care sa completeze automat coloana pk_carte la inserarea unei carti in tabela "carti".
+-- 2 Based on the model, write a trigger that auto-fills book_id when inserting a row into books.
 
-drop sequence pk_carte;  
-drop trigger before_insert_carti;
+drop sequence book_id;  
+drop trigger before_insert_books;
 
-create sequence pk_carte
+create sequence book_id
   increment by 1
   start with 13
   minvalue 1
   maxvalue 9999999999999;
   
-create or replace trigger before_insert_carti
-  before insert on carti
+create or replace trigger before_insert_books
+  before insert on books
   for each row
 begin
-  select pk_carte.nextval into :new.pk_carte from dual;
+  select book_id.nextval into :new.book_id from dual;
 end;
 /
 
-delete from carti;
-insert into carti (domeniu, titlu_carte, pk_autor1, pk_autor2, pk_autor3) values ('beletristica', 'Test Book', 1, null, null);
-select * from carti;
+delete from books;
+insert into books (category, book_title, primary_author_id, secondary_author_id, tertiary_author_id) values ('Fiction', 'Test Book', 1, null, null);
+select * from books;
 
 
---3 Sa se scrie un trigger care completeaza automat data_start si data_end pentru un nou imprumut (data_start = sysdate, data_end = data_start + 3 saptamani)
+-- 3 Write a trigger that auto-fills start_date and due_date for a new loan (start_date = sysdate, due_date = start_date + 3 weeks)
 
-create or replace trigger before_insert_imprumuturi
-  before insert on imprumuturi
+create or replace trigger before_insert_loans
+  before insert on loans
   for each row
 begin
-  -- setăm data_start la data curentă
-  :new.data_start := sysdate;
+  -- set start_date to current date
+  :new.start_date := sysdate;
 
-  -- setăm data_end la 3 săptămâni de la data_start
-  :new.data_end := sysdate + 21; -- 21 zile = 3 săptămâni
+  -- set due_date to 3 weeks after start_date
+  :new.due_date := sysdate + 21; -- 21 days = 3 weeks
 end;
 /
 
-delete from imprumuturi;
-insert into imprumuturi values(1, 1, 1, null, null, null, null);
-select * from imprumuturi;
+delete from loans;
+insert into loans values(1, 1, 1, null, null, null, null);
+select * from loans;
 
 
 
