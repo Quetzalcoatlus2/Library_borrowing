@@ -189,10 +189,10 @@ where i.book_id IN (
 update books
 set book_title = upper(book_title);
 
--- 6 Titles of books written by a specific primary author should be init-capitalized (bind numeric :primary_author_id)
+-- 6 Titles of books written by a specific primary author should be init-capitalized (example uses author_id = 1)
 update books
 set book_title = initcap(book_title)
-where primary_author_id = :primary_author_id;
+where primary_author_id = 1;
 
 
 
@@ -256,7 +256,6 @@ select book_available(9) as one_if_borrowed from dual;
 --create or replace 
 --function book_count_per_author(author_name in varchar2) return number is
 --begin
-    -- your logic here
 --    return ...;
 --end;
 --/
