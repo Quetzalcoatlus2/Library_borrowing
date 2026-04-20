@@ -192,7 +192,7 @@ set book_title = upper(book_title);
 -- 6 Titles of books written by an author (primary author) should be init-capitalized
 update books
 set book_title = initcap(book_title)
-where primary_author_id = 1;
+where primary_author_id = :primary_author_id;
 
 
 
@@ -329,7 +329,7 @@ end;
 /
 
 delete from books;
-insert into books (category, book_title, primary_author_id, secondary_author_id, tertiary_author_id) values ('fiction', 'Test Book', 1, null, null);
+insert into books (category, book_title, primary_author_id, secondary_author_id, tertiary_author_id) values ('Fiction', 'Test Book', 1, null, null);
 select * from books;
 
 
