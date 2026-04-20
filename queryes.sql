@@ -40,7 +40,7 @@ order by i.due_date;
 select c.book_title, cit.reader_name, i.start_date, i.due_date, trunc(sysdate - i.start_date) as days_since_borrowed, greatest(trunc(sysdate - i.due_date),0) as overdue_days from books c,  readers cit, loans i
 where c.book_id = i.book_id 
 and cit.reader_id = i.reader_id
-and i.return_date is null
+and i.return_date is null;
 
 -- 5  All loans older than 2 weeks
 select book_title, reader_name, start_date, due_date, return_date from books c, readers ci, loans i
@@ -189,7 +189,7 @@ where i.book_id IN (
 update books
 set book_title = upper(book_title);
 
--- 6 Titles of books written by a specific primary author should be init-capitalized (use :primary_author_id)
+-- 6 Titles of books written by a specific primary author should be init-capitalized (bind numeric :primary_author_id)
 update books
 set book_title = initcap(book_title)
 where primary_author_id = :primary_author_id;
