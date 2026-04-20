@@ -189,7 +189,7 @@ where i.book_id IN (
 update books
 set book_title = upper(book_title);
 
--- 6 Titles of books written by a specific primary author should be init-capitalized (example author: Neil Gaiman)
+-- 6 Titles of books written by a specific primary author should be init-capitalized (hardcoded example author name: Neil Gaiman)
 update books b
 set book_title = initcap(book_title)
 where b.primary_author_id in (
@@ -265,7 +265,7 @@ select book_available(9) as one_if_borrowed from dual;
 --/
 
 create or replace 
-function book_count_per_author(author_id in number) 
+function book_count_per_author(p_author_id in number) 
 return number 
 is
     v_count number := 0;
@@ -273,9 +273,9 @@ begin
     select count(c.book_id)
     into v_count
     from books c
-    where (c.primary_author_id = author_id and c.primary_author_id is not null)
-       or (c.secondary_author_id = author_id and c.primary_author_id is not null) 
-       or (c.tertiary_author_id = author_id and c.primary_author_id is not null);
+    where (c.primary_author_id = p_author_id and c.primary_author_id is not null)
+       or (c.secondary_author_id = p_author_id and c.secondary_author_id is not null) 
+       or (c.tertiary_author_id = p_author_id and c.tertiary_author_id is not null);
 
     return v_count;
 end;
