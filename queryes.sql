@@ -189,7 +189,7 @@ where i.book_id IN (
 update books
 set book_title = upper(book_title);
 
--- 6 Titles of books written by an author (primary author) should be init-capitalized
+-- 6 Titles of books written by a specific primary author should be init-capitalized (use :primary_author_id)
 update books
 set book_title = initcap(book_title)
 where primary_author_id = :primary_author_id;
