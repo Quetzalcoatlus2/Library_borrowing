@@ -189,10 +189,14 @@ where i.book_id IN (
 update books
 set book_title = upper(book_title);
 
--- 6 Titles of books written by a specific primary author should be init-capitalized (example uses primary_author_id = 1)
-update books
+-- 6 Titles of books written by a specific primary author should be init-capitalized (example author: Neil Gaiman)
+update books b
 set book_title = initcap(book_title)
-where primary_author_id = 1;
+where b.primary_author_id in (
+    select a.author_id
+    from authors a
+    where a.author_name = 'Neil Gaiman'
+);
 
 
 
